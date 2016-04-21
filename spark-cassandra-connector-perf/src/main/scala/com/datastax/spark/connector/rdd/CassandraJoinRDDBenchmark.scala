@@ -20,8 +20,8 @@ class CassandraJoinRDDBenchmark {
   @Benchmark
   @BenchmarkMode(Array(Mode.SingleShotTime))
   @OutputTimeUnit(TimeUnit.MILLISECONDS)
-  @Fork(jvmArgs = Array("-Xmx4096m", "-XX:MaxDirectMemorySize=1024m"))
-  def measureOneElementPerPartitionsJoin(f: ModeratePartitionsFixture): List[_] = {
+  @Fork(jvmArgs = Array("-Xmx2048m"))
+  def measureOneElementPerPartitionsJoin(f: OneElementPerPartitionsFixture): List[_] = {
     val it = f.rdd.fetchIterator(f.session, f.rdd.boundStatementBuilder(f.session), f.left.iterator)
     it.toList
   }
@@ -29,8 +29,8 @@ class CassandraJoinRDDBenchmark {
   @Benchmark
   @BenchmarkMode(Array(Mode.SingleShotTime))
   @OutputTimeUnit(TimeUnit.MILLISECONDS)
-  @Fork(jvmArgs = Array("-Xmx4096m", "-XX:MaxDirectMemorySize=1024m"))
-  def measureSmallPartitionsJoin(f: ModeratePartitionsFixture): List[_] = {
+  @Fork(jvmArgs = Array("-Xmx2048m"))
+  def measureSmallPartitionsJoin(f: SmallPartitionsFixture): List[_] = {
     val it = f.rdd.fetchIterator(f.session, f.rdd.boundStatementBuilder(f.session), f.left.iterator)
     it.toList
   }
@@ -38,7 +38,7 @@ class CassandraJoinRDDBenchmark {
   @Benchmark
   @BenchmarkMode(Array(Mode.SingleShotTime))
   @OutputTimeUnit(TimeUnit.MILLISECONDS)
-  @Fork(jvmArgs = Array("-Xmx4096m", "-XX:MaxDirectMemorySize=1024m"))
+  @Fork(jvmArgs = Array("-Xmx2048m"))
   def measureModeratePartitionsJoin(f: ModeratePartitionsFixture): List[_] = {
     val it = f.rdd.fetchIterator(f.session, f.rdd.boundStatementBuilder(f.session), f.left.iterator)
     it.toList
@@ -47,7 +47,7 @@ class CassandraJoinRDDBenchmark {
   @Benchmark
   @BenchmarkMode(Array(Mode.SingleShotTime))
   @OutputTimeUnit(TimeUnit.MILLISECONDS)
-  @Fork(jvmArgs = Array("-Xmx4096m", "-XX:MaxDirectMemorySize=1024m"))
+  @Fork(jvmArgs = Array("-Xmx2048m"))
   def measureBigPartitionsJoin(f: BigPartitionsFixture): List[_] = {
     val it = f.rdd.fetchIterator(f.session, f.rdd.boundStatementBuilder(f.session), f.left.iterator)
     it.toList
@@ -55,12 +55,12 @@ class CassandraJoinRDDBenchmark {
 }
 
 object CassandraJoinRDDBenchmark {
-  val ks = "spark_connector_join_performance_test"
+  val Keyspace = "spark_connector_join_performance_test"
 
-  val rows = 2000000
-  val smallPartitionSize = 10
-  val moderatePartitionSize = 500
-  val bigPartitionSize = 5000
+  val Rows = 200000
+  val SmallPartitionSize = 10
+  val ModeratePartitionSize = 500
+  val BigPartitionSize = 5000
 
   @State(Scope.Benchmark)
   class Fixture(partitionSize: Int, table: String) extends SparkTemplate {
@@ -77,8 +77,8 @@ object CassandraJoinRDDBenchmark {
 
     @Setup(Level.Trial)
     def init(): Unit = {
-      left = (0 until rows / partitionSize).map(Tuple1(_))
-      rdd = sc.parallelize(left).joinWithCassandraTable(ks, table)
+      left = (0 until Rows / partitionSize).map(Tuple1(_))
+      rdd = sc.parallelize(left).joinWithCassandraTable(Keyspace, table)
       session = rdd.connector.openSession()
     }
 
@@ -90,15 +90,15 @@ object CassandraJoinRDDBenchmark {
   }
 
   @State(Scope.Benchmark)
-  class OneElementPerPartitionsFixture extends Fixture(moderatePartitionSize, "one_element_partitions")
+  class OneElementPerPartitionsFixture extends Fixture(1, "one_element_partitions")
 
   @State(Scope.Benchmark)
-  class SmallPartitionsFixture extends Fixture(moderatePartitionSize, "small_partitions")
+  class SmallPartitionsFixture extends Fixture(SmallPartitionSize, "small_partitions")
 
   @State(Scope.Benchmark)
-  class ModeratePartitionsFixture extends Fixture(moderatePartitionSize, "moderate_partitions")
+  class ModeratePartitionsFixture extends Fixture(ModeratePartitionSize, "moderate_partitions")
 
   @State(Scope.Benchmark)
-  class BigPartitionsFixture extends Fixture(bigPartitionSize, "big_partitions")
+  class BigPartitionsFixture extends Fixture(BigPartitionSize, "big_partitions")
 
 }

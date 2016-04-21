@@ -40,7 +40,7 @@ object CassandraJoinRDDData extends App with SparkTemplate {
     partitionSize: Int): Unit = {
     def executeAsync(data: (Int, Long, String)): ResultSetFuture = {
       session.executeAsync(
-        s"INSERT INTO $ks.$table (key, group, value) VALUES (?, ?, ?)",
+        s"INSERT INTO $Keyspace.$table (key, group, value) VALUES (?, ?, ?)",
         data._1: Integer, data._2.toLong: JLong, data._3.toString
       )
     }
@@ -55,17 +55,17 @@ object CassandraJoinRDDData extends App with SparkTemplate {
 
   val conn = CassandraConnector(config)
   conn.withSessionDo { session =>
-    session.execute(s"DROP KEYSPACE IF EXISTS $ks")
-    session.execute(createKeyspaceCql(ks))
+    session.execute(s"DROP KEYSPACE IF EXISTS $Keyspace")
+    session.execute(createKeyspaceCql(Keyspace))
 
-    session.execute(createTableCql(ks, "one_element_partitions"))
-    session.execute(createTableCql(ks, "small_partitions"))
-    session.execute(createTableCql(ks, "moderate_partitions"))
-    session.execute(createTableCql(ks, "big_partitions"))
+    session.execute(createTableCql(Keyspace, "one_element_partitions"))
+    session.execute(createTableCql(Keyspace, "small_partitions"))
+    session.execute(createTableCql(Keyspace, "moderate_partitions"))
+    session.execute(createTableCql(Keyspace, "big_partitions"))
 
-    insertData(session, ks, "one_element_partitions", rows, 1)
-    insertData(session, ks, "small_partitions", rows / smallPartitionSize, smallPartitionSize)
-    insertData(session, ks, "moderate_partitions", rows/ moderatePartitionSize, moderatePartitionSize)
-    insertData(session, ks, "big_partitions", rows / bigPartitionSize, bigPartitionSize)
+    insertData(session, Keyspace, "one_element_partitions", Rows, 1)
+    insertData(session, Keyspace, "small_partitions", Rows / SmallPartitionSize, SmallPartitionSize)
+    insertData(session, Keyspace, "moderate_partitions", Rows/ ModeratePartitionSize, ModeratePartitionSize)
+    insertData(session, Keyspace, "big_partitions", Rows / BigPartitionSize, BigPartitionSize)
   }
 }

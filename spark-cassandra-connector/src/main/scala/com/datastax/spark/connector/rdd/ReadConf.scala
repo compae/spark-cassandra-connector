@@ -12,17 +12,13 @@ import org.apache.spark.SparkConf
   * @param fetchSizeInRows number of CQL rows to fetch in a single round-trip to Cassandra
   * @param consistencyLevel consistency level for reads, default LOCAL_ONE;
   *                         higher consistency level will disable data-locality
-  * @param taskMetricsEnabled whether or not enable task metrics updates (requires Spark 1.2+)
-  * @param cassandraJoinConcurrentReads maximum number of ongoing calls to Cassandra while joining 
-  *                                     RDD with Cassandra table */
+  * @param taskMetricsEnabled whether or not enable task metrics updates (requires Spark 1.2+) */
 case class ReadConf(
   splitCount: Option[Int] = None,
   splitSizeInMB: Int = ReadConf.SplitSizeInMBParam.default,
   fetchSizeInRows: Int = ReadConf.FetchSizeInRowsParam.default,
   consistencyLevel: ConsistencyLevel = ReadConf.ConsistencyLevelParam.default,
-  taskMetricsEnabled: Boolean = ReadConf.TaskMetricParam.default,
-  cassandraJoinConcurrentReads: Int  = ReadConf.CassandraJoinConcurrentReads.default
-)
+  taskMetricsEnabled: Boolean = ReadConf.TaskMetricParam.default)
 
 
 object ReadConf {
@@ -53,20 +49,12 @@ object ReadConf {
     description = """Sets whether to record connector specific metrics on write"""
   )
 
-  val CassandraJoinConcurrentReads = ConfigParameter[Int](
-    name = "spark.cassandra.input.join.concurrent.reads",
-    section = ReferenceSection,
-    default = 5,
-    description =
-      "Maximum number of ongoing async requests to Cassandra per executor while joining RDD with Cassandra table")
-
   // Whitelist for allowed Read environment variables
   val Properties = Set(
     SplitSizeInMBParam,
     FetchSizeInRowsParam,
     ConsistencyLevelParam,
-    TaskMetricParam,
-    CassandraJoinConcurrentReads
+    TaskMetricParam
   )
 
   def fromSparkConf(conf: SparkConf): ReadConf = {
@@ -77,9 +65,7 @@ object ReadConf {
       fetchSizeInRows = conf.getInt(FetchSizeInRowsParam.name, FetchSizeInRowsParam.default),
       splitSizeInMB = conf.getInt(SplitSizeInMBParam.name, SplitSizeInMBParam.default),
       consistencyLevel = ConsistencyLevel.valueOf(conf.get(ConsistencyLevelParam.name, ConsistencyLevelParam.default.name)),
-      taskMetricsEnabled = conf.getBoolean(TaskMetricParam.name, TaskMetricParam.default),
-      cassandraJoinConcurrentReads = conf.getInt(CassandraJoinConcurrentReads.name,
-        CassandraJoinConcurrentReads.default)
+      taskMetricsEnabled = conf.getBoolean(TaskMetricParam.name, TaskMetricParam.default)
     )
   }
 

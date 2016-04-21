@@ -7,7 +7,7 @@ import com.datastax.spark.connector._
 import com.datastax.spark.connector.cql._
 import com.datastax.spark.connector.rdd.reader._
 import com.datastax.spark.connector.util.CqlWhereParser.{EqPredicate, InListPredicate, InPredicate, RangePredicate}
-import com.datastax.spark.connector.util.{CountingIterator, CqlWhereParser, MaterializingIterator}
+import com.datastax.spark.connector.util.{CountingIterator, CqlWhereParser}
 import com.datastax.spark.connector.writer._
 import com.datastax.spark.connector.util.Quote._
 import org.apache.spark.rdd.RDD
@@ -260,9 +260,8 @@ class CassandraJoinRDD[L, R] private[connector](
       })
       resultFuture
     }
-
-    new MaterializingIterator(leftIterator.map(pairWithRight), readConf.cassandraJoinConcurrentReads)
-      .flatMap(_.get)
+    val materializedFutures = leftIterator.map(pairWithRight).toList
+    materializedFutures.iterator.flatMap(_.get)
   }
 
   override protected def getPartitions: Array[Partition] = {
